@@ -3,27 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}Market{% endblock %}</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+    <style>
+        .sidenav {
+            margin-top: 64px;
+            width: 250px;
+        }
+        main {
+            margin-left: 250px;
+        }
+    </style>
 </head>
 <body>
 <header>
     <nav>
         <div class="nav-wrapper">
             <a href="#" class="brand-logo">Market</a>
-            <a href="#" data-target="mobile-demo" class="sidenav-trigger"><i class="material-icons">menu</i></a>
-            <ul class="right hide-on-med-and-down">
+            <ul class="right">
                 <li><a href="/">Home</a></li>
                 <li><a href="/orders">Orders</a></li>
             </ul>
         </div>
     </nav>
-
-    <ul class="sidenav" id="mobile-demo">
-        <li><a href="/">Home</a></li>
-        <li><a href="/orders">Orders</a></li>
-    </ul>
 </header>
+
+<ul id="slide-out" class="sidenav">
+    <li><a href="/">Home</a></li>
+    <li><a href="/orders">Orders</a></li>
+</ul>
+<a href="#" data-target="slide-out" class="sidenav-trigger left waves-effect waves-light btn show-on-large">menu</a>
+
 
 <main>
     <div class="container">
@@ -31,17 +42,11 @@
     </div>
 </main>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var elems = document.querySelectorAll('.sidenav');
-        M.Sidenav.init(elems);
-    });
-</script>
-</body>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         M.AutoInit();
     });
 </script>
+</body>
 </html>
