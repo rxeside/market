@@ -46,7 +46,6 @@ class OrderController extends AbstractController
         ]);
     }
 
-    // Функция получения всех заказов
     private function getAllOrders(): array
     {
         return [

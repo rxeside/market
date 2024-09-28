@@ -44,65 +44,86 @@
             let currentSort = 'id';
             let currentOrder = 'asc';
 
-            var elems = document.querySelectorAll('select');
-            M.FormSelect.init(elems);
+            initMaterializeSelect();
+
+            loadOrders();
+
+            document.querySelector('#prevPage').addEventListener('click', handlePrevPage);
+            document.querySelector('#nextPage').addEventListener('click', handleNextPage);
+            document.querySelectorAll('.sort').forEach(column => column.addEventListener('click', handleSort));
+            document.querySelector('#customerFilter').addEventListener('input', handleFilterChange);
+            document.querySelector('#statusFilter').addEventListener('change', handleFilterChange);
+
+            function initMaterializeSelect() {
+                var elems = document.querySelectorAll('select');
+                M.FormSelect.init(elems);
+            }
 
             function loadOrders(page = 1, sort = 'id', order = 'asc', customer = '', status = '') {
                 fetch(`/orders/data?page=${page}&sort=${sort}&order=${order}&customer=${customer}&status=${status}`)
                     .then(response => response.json())
                     .then(data => {
-                        const tableBody = document.querySelector('#orderTable tbody');
-                        tableBody.innerHTML = '';
-                        data.orders.forEach(order => {
-                            const row = `
-                            <tr>
-                                <td>${order.id}</td>
-                                <td>${order.customer}</td>
-                                <td>$${order.total.toFixed(2)}</td>
-                                <td>${order.status}</td>
-                            </tr>
-                        `;
-                            tableBody.insertAdjacentHTML('beforeend', row);
-                        });
-
-                        document.querySelector('#currentPage').textContent = `Page ${data.page}`;
-                        currentPage = data.page;
-
-                        document.querySelector('#prevPage').disabled = data.page === 1;
-                        document.querySelector('#nextPage').disabled = data.page >= data.pages;
+                        updateOrderTable(data.orders);
+                        updatePagination(data);
                     })
                     .catch(error => console.error('Error fetching data:', error));
             }
 
-            loadOrders();
+            function updateOrderTable(orders) {
+                const tableBody = document.querySelector('#orderTable tbody');
+                tableBody.innerHTML = '';
+                orders.forEach(order => {
+                    const row = `
+                        <tr>
+                            <td>${order.id}</td>
+                            <td>${order.customer}</td>
+                            <td>$${order.total.toFixed(2)}</td>
+                            <td>${order.status}</td>
+                        </tr>
+                    `;
+                    tableBody.insertAdjacentHTML('beforeend', row);
+                });
+            }
 
-            document.querySelector('#prevPage').addEventListener('click', function(event) {
+            function updatePagination(data) {
+                document.querySelector('#currentPage').textContent = `Page ${data.page}`;
+                currentPage = data.page;
+                document.querySelector('#prevPage').disabled = data.page === 1;
+                document.querySelector('#nextPage').disabled = data.page >= data.pages;
+            }
+
+            function handlePrevPage(event) {
                 event.preventDefault();
                 if (currentPage > 1) {
                     loadOrders(currentPage - 1, currentSort, currentOrder, getCustomerFilter(), getStatusFilter());
                 }
-            });
+            }
 
-            document.querySelector('#nextPage').addEventListener('click', function(event) {
+            function handleNextPage(event) {
                 event.preventDefault();
                 loadOrders(currentPage + 1, currentSort, currentOrder, getCustomerFilter(), getStatusFilter());
-            });
+            }
 
-            document.querySelectorAll('.sort').forEach(function(column) {
-                column.addEventListener('click', function(event) {
-                    event.preventDefault();
-                    const sortColumn = column.getAttribute('data-column');
-                    let sortOrder = column.getAttribute('data-order');
+            function handleSort(event) {
+                event.preventDefault();
+                const column = event.target;
+                const sortColumn = column.getAttribute('data-column');
+                let sortOrder = column.getAttribute('data-order');
 
-                    sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
-                    column.setAttribute('data-order', sortOrder);
+                sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+                column.setAttribute('data-order', sortOrder);
 
-                    currentSort = sortColumn;
-                    currentOrder = sortOrder;
+                currentSort = sortColumn;
+                currentOrder = sortOrder;
 
-                    loadOrders(currentPage, sortColumn, sortOrder, getCustomerFilter(), getStatusFilter());
-                });
-            });
+                currentPage = 1;
+                loadOrders(currentPage, sortColumn, sortOrder, getCustomerFilter(), getStatusFilter());
+            }
+
+            function handleFilterChange() {
+                currentPage = 1;
+                loadOrders(currentPage, currentSort, currentOrder, getCustomerFilter(), getStatusFilter());
+            }
 
             function getCustomerFilter() {
                 return document.querySelector('#customerFilter').value;
@@ -111,14 +132,6 @@
             function getStatusFilter() {
                 return document.querySelector('#statusFilter').value;
             }
-
-            document.querySelector('#customerFilter').addEventListener('input', function() {
-                loadOrders(currentPage, currentSort, currentOrder, getCustomerFilter(), getStatusFilter());
-            });
-
-            document.querySelector('#statusFilter').addEventListener('change', function() {
-                loadOrders(currentPage, currentSort, currentOrder, getCustomerFilter(), getStatusFilter());
-            });
         });
     </script>
 {% endblock %}
