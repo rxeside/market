@@ -1,7 +1,7 @@
 <?php
 namespace App\Controller;
 
-use App\Model\OrderFilter;
+use App\Model\ListOrdersSpecification;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,7 +19,7 @@ class OrderController extends AbstractController
     #[Route('/orders/data', name: 'order_data')]
     public function getData(Request $request): JsonResponse
     {
-        $orderFilter = new OrderFilter($request->query->all());
+        $orderFilter = new ListOrdersSpecification($request->query->all());
 
         $allOrders = $this->getAllOrders();
 
@@ -61,7 +61,7 @@ class OrderController extends AbstractController
         ];
     }
 
-    private function filterOrders(array $orders, OrderFilter $filter): array
+    private function filterOrders(array $orders, ListOrdersSpecification $filter): array
     {
         return array_filter($orders, static function ($order) use ($filter) {
             $customerMatch = !$filter->getCustomerFilter() || stripos($order['customer'], $filter->getCustomerFilter()) !== false;
@@ -70,7 +70,7 @@ class OrderController extends AbstractController
         });
     }
 
-    private function sortOrders(array $orders, OrderFilter $filter): array
+    private function sortOrders(array $orders, ListOrdersSpecification $filter): array
     {
         usort($orders, static function ($a, $b) use ($filter) {
             if ($filter->getSortOrder() === 'asc') {

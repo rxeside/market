@@ -1,7 +1,7 @@
 <?php
 namespace App\Model;
 
-class OrderFilter
+class ListOrdersSpecification
 {
     private int $page;
     private int $limit;
