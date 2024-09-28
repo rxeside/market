@@ -27,13 +27,10 @@ class OrderController extends AbstractController
 
         $allOrders = $this->getAllOrders();
 
-        // Применение фильтров
         $filteredOrders = $this->filterOrders($allOrders, $customerFilter, $statusFilter);
 
-        // Сортировка заказов
         $sortedOrders = $this->sortOrders($filteredOrders, $sortColumn, $sortOrder);
 
-        // Пагинация
         $paginatedOrders = $this->paginateOrders($sortedOrders, $page, $limit);
 
 
