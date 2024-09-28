@@ -1,6 +1,7 @@
 <?php
 namespace App\Controller;
 
+use App\Model\OrderFilter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -18,31 +19,25 @@ class OrderController extends AbstractController
     #[Route('/orders/data', name: 'order_data')]
     public function getData(Request $request): JsonResponse
     {
-        $page = (int) $request->query->get('page', 1);
-        $limit = (int) $request->query->get('limit', 10);
-        $sortColumn = $request->query->get('sort', 'id');
-        $sortOrder = $request->query->get('order', 'asc');
-        $customerFilter = $request->query->get('customer', '');
-        $statusFilter = $request->query->get('status', '');
+        $orderFilter = new OrderFilter($request->query->all());
 
         $allOrders = $this->getAllOrders();
 
-        $filteredOrders = $this->filterOrders($allOrders, $customerFilter, $statusFilter);
+        $filteredOrders = $this->filterOrders($allOrders, $orderFilter);
 
-        $sortedOrders = $this->sortOrders($filteredOrders, $sortColumn, $sortOrder);
+        $sortedOrders = $this->sortOrders($filteredOrders, $orderFilter);
 
-        $paginatedOrders = $this->paginateOrders($sortedOrders, $page, $limit);
-
+        $paginatedOrders = $this->paginateOrders($sortedOrders, $orderFilter->getPage(), $orderFilter->getLimit());
 
         $totalOrders = count($sortedOrders);
 
         return new JsonResponse([
             'orders' => $paginatedOrders,
             'total' => $totalOrders,
-            'page' => $page,
-            'pages' => ceil($totalOrders / $limit),
-            'sort' => $sortColumn,
-            'order' => $sortOrder,
+            'page' => $orderFilter->getPage(),
+            'pages' => ceil($totalOrders / $orderFilter->getLimit()),
+            'sort' => $orderFilter->getSortColumn(),
+            'order' => $orderFilter->getSortOrder(),
         ]);
     }
 
@@ -66,33 +61,23 @@ class OrderController extends AbstractController
         ];
     }
 
-    private function filterOrders(array $orders, string $customerFilter, string $statusFilter): array
+    private function filterOrders(array $orders, OrderFilter $filter): array
     {
-        if ($customerFilter) {
-            $orders = array_filter($orders, function($order) use ($customerFilter) {
-                return stripos($order['customer'], $customerFilter) !== false;
-            });
-        }
-
-        if ($statusFilter) {
-            $orders = array_filter($orders, function($order) use ($statusFilter) {
-                return stripos($order['status'], $statusFilter) !== false;
-            });
-        }
-
-        return $orders;
+        return array_filter($orders, static function ($order) use ($filter) {
+            $customerMatch = !$filter->getCustomerFilter() || stripos($order['customer'], $filter->getCustomerFilter()) !== false;
+            $statusMatch = !$filter->getStatusFilter() || stripos($order['status'], $filter->getStatusFilter()) !== false;
+            return $customerMatch && $statusMatch;
+        });
     }
 
-    private function sortOrders(array $orders, string $sortColumn, string $sortOrder): array
+    private function sortOrders(array $orders, OrderFilter $filter): array
     {
-        usort($orders, function($a, $b) use ($sortColumn, $sortOrder) {
-            if ($sortOrder === 'asc') {
-                return $a[$sortColumn] <=> $b[$sortColumn];
-            } else {
-                return $b[$sortColumn] <=> $a[$sortColumn];
+        usort($orders, static function ($a, $b) use ($filter) {
+            if ($filter->getSortOrder() === 'asc') {
+                return $a[$filter->getSortColumn()] <=> $b[$filter->getSortColumn()];
             }
+            return $b[$filter->getSortColumn()] <=> $a[$filter->getSortColumn()];
         });
-
         return $orders;
     }
 
