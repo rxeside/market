@@ -14,17 +14,13 @@ class ListOrdersSpecification
     {
         $this->page = isset($queryParams['page'])  ? (int)$queryParams['page'] : 1;
         $this->limit = isset($queryParams['limit']) ? (int)$queryParams['limit'] : 10;
-
         $this->sortColumn = isset($queryParams['sort']) ? (string)$queryParams['sort'] : 'id';
         $this->sortOrder = isset($queryParams['order']) ? (string)$queryParams['order'] : 'asc';
         $this->customerFilter = isset($queryParams['customer']) ? (string)$queryParams['customer'] : '';
         $this->statusFilter = isset($queryParams['status']) ? (string)$queryParams['status'] : '';
-
         $this->validateSortColumn();
         $this->validateSortOrder();
     }
-
-
 
     public function getPage(): int
     {
