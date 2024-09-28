@@ -25,7 +25,34 @@ class OrderController extends AbstractController
         $customerFilter = $request->query->get('customer', '');
         $statusFilter = $request->query->get('status', '');
 
-        $allOrders = [
+        $allOrders = $this->getAllOrders();
+
+        // Применение фильтров
+        $filteredOrders = $this->filterOrders($allOrders, $customerFilter, $statusFilter);
+
+        // Сортировка заказов
+        $sortedOrders = $this->sortOrders($filteredOrders, $sortColumn, $sortOrder);
+
+        // Пагинация
+        $paginatedOrders = $this->paginateOrders($sortedOrders, $page, $limit);
+
+
+        $totalOrders = count($sortedOrders);
+
+        return new JsonResponse([
+            'orders' => $paginatedOrders,
+            'total' => $totalOrders,
+            'page' => $page,
+            'pages' => ceil($totalOrders / $limit),
+            'sort' => $sortColumn,
+            'order' => $sortOrder,
+        ]);
+    }
+
+    // Функция получения всех заказов
+    private function getAllOrders(): array
+    {
+        return [
             ['id' => 1, 'customer' => 'John Doe', 'total' => 100.50, 'status' => 'Completed'],
             ['id' => 2, 'customer' => 'Jane Smith', 'total' => 230.00, 'status' => 'Pending'],
             ['id' => 3, 'customer' => 'Michael Brown', 'total' => 320.75, 'status' => 'Shipped'],
@@ -41,20 +68,28 @@ class OrderController extends AbstractController
             ['id' => 13, 'customer' => 'Nagato Uzumaki', 'total' => 120.99, 'status' => 'Completed'],
             ['id' => 14, 'customer' => 'Leukhin Denis', 'total' => 60.50, 'status' => 'Pending'],
         ];
+    }
 
+    private function filterOrders(array $orders, string $customerFilter, string $statusFilter): array
+    {
         if ($customerFilter) {
-            $allOrders = array_filter($allOrders, function($order) use ($customerFilter) {
+            $orders = array_filter($orders, function($order) use ($customerFilter) {
                 return stripos($order['customer'], $customerFilter) !== false;
             });
         }
 
         if ($statusFilter) {
-            $allOrders = array_filter($allOrders, function($order) use ($statusFilter) {
+            $orders = array_filter($orders, function($order) use ($statusFilter) {
                 return stripos($order['status'], $statusFilter) !== false;
             });
         }
 
-        usort($allOrders, function($a, $b) use ($sortColumn, $sortOrder) {
+        return $orders;
+    }
+
+    private function sortOrders(array $orders, string $sortColumn, string $sortOrder): array
+    {
+        usort($orders, function($a, $b) use ($sortColumn, $sortOrder) {
             if ($sortOrder === 'asc') {
                 return $a[$sortColumn] <=> $b[$sortColumn];
             } else {
@@ -62,18 +97,12 @@ class OrderController extends AbstractController
             }
         });
 
-        $totalOrders = count($allOrders);
+        return $orders;
+    }
 
+    private function paginateOrders(array $orders, int $page, int $limit): array
+    {
         $offset = ($page - 1) * $limit;
-        $orders = array_slice($allOrders, $offset, $limit);
-
-        return new JsonResponse([
-            'orders' => $orders,
-            'total' => $totalOrders,
-            'page' => $page,
-            'pages' => ceil($totalOrders / $limit),
-            'sort' => $sortColumn,
-            'order' => $sortOrder,
-        ]);
+        return array_slice($orders, $offset, $limit);
     }
 }
