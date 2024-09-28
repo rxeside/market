@@ -14,13 +14,17 @@ class ListOrdersSpecification
     {
         $this->page = isset($queryParams['page']) && filter_var($queryParams['page'], FILTER_VALIDATE_INT) ? (int)$queryParams['page'] : 1;
         $this->limit = isset($queryParams['limit']) && filter_var($queryParams['limit'], FILTER_VALIDATE_INT) ? (int)$queryParams['limit'] : 10;
-        $this->sortColumn = (isset($queryParams['sort']) && $queryParams['sort'] !== '' && $queryParams['sort'] !== 'null') ? (string)$queryParams['sort'] : 'id';
-        $this->sortOrder = (isset($queryParams['order']) && $queryParams['order'] !== '' && $queryParams['order'] !== 'null') ? (string)$queryParams['order'] : 'asc';
+
+        $this->sortColumn = !empty($queryParams['sort']) && is_string($queryParams['sort']) ? $queryParams['sort'] : 'id';
+        $this->sortOrder = !empty($queryParams['order']) && is_string($queryParams['order']) ? $queryParams['order'] : 'asc';
+
         $this->customerFilter = isset($queryParams['customer']) ? (string)$queryParams['customer'] : '';
         $this->statusFilter = isset($queryParams['status']) ? (string)$queryParams['status'] : '';
 
+        $this->validateSortColumn();
         $this->validateSortOrder();
     }
+
 
 
     public function getPage(): int
@@ -53,6 +57,11 @@ class ListOrdersSpecification
         return $this->statusFilter;
     }
 
+    private function validateSortColumn(): void {
+        if (!in_array($this->sortColumn, ['id', 'customer', 'total', 'status'], true)) {
+            $this->sortColumn = 'id';
+        }
+    }
     private function validateSortOrder(): void
     {
         if (!in_array($this->sortOrder, ['asc', 'desc'], true)) {
