@@ -12,15 +12,16 @@ class ListOrdersSpecification
 
     public function __construct(array $queryParams)
     {
-        $this->page = isset($queryParams['page']) ? (int)$queryParams['page'] : 1;
-        $this->limit = isset($queryParams['limit']) ? (int)$queryParams['limit'] : 10;
-        $this->sortColumn = $queryParams['sort'] ?? 'id';
-        $this->sortOrder = $queryParams['order'] ?? 'asc';
-        $this->customerFilter = $queryParams['customer'] ?? '';
-        $this->statusFilter = $queryParams['status'] ?? '';
+        $this->page = isset($queryParams['page']) && filter_var($queryParams['page'], FILTER_VALIDATE_INT) ? (int)$queryParams['page'] : 1;
+        $this->limit = isset($queryParams['limit']) && filter_var($queryParams['limit'], FILTER_VALIDATE_INT) ? (int)$queryParams['limit'] : 10;
+        $this->sortColumn = (isset($queryParams['sort']) && $queryParams['sort'] !== '' && $queryParams['sort'] !== 'null') ? (string)$queryParams['sort'] : 'id';
+        $this->sortOrder = (isset($queryParams['order']) && $queryParams['order'] !== '' && $queryParams['order'] !== 'null') ? (string)$queryParams['order'] : 'asc';
+        $this->customerFilter = isset($queryParams['customer']) ? (string)$queryParams['customer'] : '';
+        $this->statusFilter = isset($queryParams['status']) ? (string)$queryParams['status'] : '';
 
         $this->validateSortOrder();
     }
+
 
     public function getPage(): int
     {
